@@ -136,7 +136,6 @@
       url: "https://26674xh7f0.execute-api.ap-northeast-1.amazonaws.com/prod/tehai",
       data: json
     }).done(function(data) {
-      console.log(data);
       var tehaiImageUrl = 'http://' + location.hostname + data.imgPath
       $('#tehaiImage').html('<img src="' + data.imgPath + '">');
       $('#tehaiImageUrl').val(tehaiImageUrl);
@@ -144,7 +143,6 @@
       $('#dlButton').attr('href', tehaiImageUrl);
       $('#dlButton').removeClass('disabled');
     }).fail(function(data) {
-      console.log(data);
       $('#tehaiImage').html('<span class="glyphicon glyphicon-alert" style="font-size: 25px;"></span> ' + data.responseJSON.errorMessage);
       document.getElementById("copyButton").setAttribute("data-clipboard-text", "");
     });
