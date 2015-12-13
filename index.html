@@ -1,0 +1,166 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.Core.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.min.js"></script>
+  <title>手牌画像ジェネレーター</title>
+</head>
+<body>
+<nav class="navbar navbar-default">
+  <div class="container">
+    <a class="navbar-brand" href="#">手牌画像ジェネレーター</a>
+  </div>
+</nav>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-6">
+      <dl class="dl-horizontal">
+        <dt>萬子</dt>
+          <dd>一二三四五六七八九</dd>
+        <dt>筒子</dt>
+          <dd>(123456789)</dd>
+        <dt>索子</dt>
+          <dd>123456789</dd>
+        <dt>字牌</dt>
+          <dd>東南西北白発中</dd>
+      </dl>
+    </div>
+    <div class="col-sm-6">
+      <dl class="dl-horizontal">
+        <dt>裏向き</dt>
+          <dd>"-"</dd>
+        <dt>横向き</dt>
+          <dd>牌の前に"_"を付ける</dd>
+        <dt>赤牌(5のみ)</dt>
+          <dd>牌の前に"r"を付ける</dd>
+      </dl>
+    </div>
+  </div>
+  <form id="tehaiForm">
+    <div class="row">
+      <div class="col-sm-8 col-sm-offset-2">
+        <label for="tehai">手牌（副露した牌は2行目以降に記述）</label>
+        <textarea name="tehai" class="form-control" rows="3" id="tehai"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-8 col-sm-offset-2">
+        <div class="col-sm-4">
+          <label for="tsumo">ツモ</label>
+          <input type="text" class="form-control" name="tsumo" id="tsumo">
+        </div>
+        <div class="col-sm-4">
+          <label for="ron">ロン</label>
+          <input type="text" class="form-control" name="ron" id="ron">
+        </div>
+        <div class="col-sm-4">
+          <label for="dora">ドラ</label>
+          <input type="text" class="form-control" name="dora" id="dora">
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="checkbox text-center">
+        <label>
+          <input type="checkbox" name="open">
+          手牌を倒す
+        </label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-2 col-sm-offset-2">
+        <button type="button" class="btn btn-default btn-lg btn-block" id="sample">Sample</button>
+      </div>
+      <div class="col-sm-4">
+        <button type="button" class="btn btn-success btn-lg btn-block" id="convert">GO!</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="row">
+    <div class="col-sm-10 col-sm-offset-1 text-center">
+      <span class="glyphicon glyphicon-triangle-bottom" style="font-size: 60pt;"></span>
+      <div class="panel panel-default" style="height: 84px; padding-top: 24px;">
+        <div id="tehaiImage"><span style="display: none;"><img src="img/loading.gif"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-6 col-sm-offset-2">
+      <div class="input-group input-group-lg">
+        <input type="text" class="form-control" id="tehaiImageUrl">
+        <div class="input-group-btn">
+          <button class="btn btn-danger" type="button" id="copyButton" data-toggle="popover"
+           data-placement="bottom" data-content="Copied!" data-trigger="focus" data-clipboard-text="">
+            <span class="glyphicon glyphicon-copy"></span> Copy
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-2">
+      <a href="#" download="tehai.png" type="button" class="btn btn-default btn-lg disabled" id="dlButton">
+        <span class="glyphicon glyphicon-download-alt"></span> Save
+      </a>
+    </div>
+  </div>
+  <div class="well well-sm" style="margin: 60px 0 30px;">
+    <p>※ 作成された画像は予告なく削除する場合があります。</p>
+    <p>牌画データ：<a href="http://suzume.hakata21.com/">雀のお宿</a></p>
+  </div
+</div>
+</body>
+<script>
+(function(){
+  function submitForm(){
+    $('#tehaiImage').html('<img src="img/loading.gif">');
+    $('#tehaiImageUrl').val('');
+    $('#dlButton').attr('href', '#');
+    $('#dlButton').addClass('disabled');
+    var form = $('#tehaiForm');
+    var param = {};
+
+    $(form.serializeArray()).each(function(i, v) {
+      param[v.name] = v.value;
+    });
+    var json = JSON.stringify(param);
+    console.log(json);
+
+    $.ajax({
+      type: "POST",
+      url: "https://26674xh7f0.execute-api.ap-northeast-1.amazonaws.com/prod/tehai",
+      data: json
+    }).done(function(data) {
+      console.log(data);
+      var tehaiImageUrl = 'http://' + location.hostname + data.imgPath
+      $('#tehaiImage').html('<img src="' + data.imgPath + '">');
+      $('#tehaiImageUrl').val(tehaiImageUrl);
+      document.getElementById("copyButton").setAttribute("data-clipboard-text", tehaiImageUrl);
+      $('#dlButton').attr('href', tehaiImageUrl);
+      $('#dlButton').removeClass('disabled');
+    }).fail(function(data) {
+      console.log(data);
+      $('#tehaiImage').html('<span class="glyphicon glyphicon-alert" style="font-size: 25px;"></span> ' + data.responseJSON.errorMessage);
+      document.getElementById("copyButton").setAttribute("data-clipboard-text", "");
+    });
+  }
+  $('#convert').on('click', function(){submitForm()});
+  $('#sample').on('click', function(){
+    $('#tehai').val("三四r五(78)13\n-南南-\n_東東東");
+    $('#tsumo').val('(8)');
+    $('#ron').val('');
+    $('#dora').val('8二');
+  });
+
+
+  var client = new ZeroClipboard( document.getElementById("copyButton") );
+
+  client.on( "ready", function( readyEvent ) {
+    $('#copyButton').popover();
+  });
+})();
+</script>
+</html>
